@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: firely
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/categories: fhir
+    tekton.dev/tags: CLI, firely
+    tekton.dev/displayName: "firely"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    A base image that runs the firely terminal.  Firely Terminal is a cross platform FHIR command line tool that helps you 
+    working with files containing FHIR resources.  It can also integrate directly with simplifier. 
+    
+    https://docs.fire.ly/projects/Firely-Terminal/InstallingFirelyTerminal.html
+
+  workspaces:
+    - name: source-dir
+  params:
+    - name: SCRIPT
+      description: The Script to be run using firely 
+      type: string
+      default: "fhir --version"
+    - name: FIRELY_IMAGE
+      description: The firely image to be used
+    - name: VERBOSE
+      description: Log the commands that are executed during firely's task.
+      type: string
+      default: "true"
+  steps:
+    - name: firely
+      image: $(params.FIRELY_IMAGE)
+      workingDir: $(workspaces.source-dir.path)
+      env:
+      - name: PARAM_VERBOSE
+        value: $(params.VERBOSE)
+      script: |
+        #!/usr/bin/env sh
+
+        if [ "${PARAM_VERBOSE}" = "true" ] ; then
+          set -x
+        fi
+
+        $(params.SCRIPT)
